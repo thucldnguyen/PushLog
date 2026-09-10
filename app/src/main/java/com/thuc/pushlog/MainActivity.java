@@ -366,7 +366,7 @@ public final class MainActivity extends Activity {
         Uri uri = data.getData();
         new AlertDialog.Builder(this)
                 .setTitle("Import old app history?")
-                .setMessage("Dates covered by the backup will exactly match it, including clearing days whose total is zero. Any later dates already in Push Log will be kept.")
+                .setMessage("Dates covered by the backup will exactly match it, including clearing days whose total is zero. Any later dates already in Pushup Log will be kept.")
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Import", (dialog, which) -> importBackup(uri))
                 .show();
@@ -420,7 +420,7 @@ public final class MainActivity extends Activity {
             new AlertDialog.Builder(this)
                     .setTitle("Notifications are off")
                     .setMessage("Your daily reminder is set for " + time +
-                            ", but Android is blocking Push Log notifications.")
+                            ", but Android is blocking Pushup Log notifications.")
                     .setNegativeButton("Cancel", null)
                     .setNeutralButton("Turn off", (dialog, which) -> disableReminder())
                     .setPositiveButton("Open settings", (dialog, which) ->
@@ -432,7 +432,7 @@ public final class MainActivity extends Activity {
         new AlertDialog.Builder(this)
                 .setTitle("Daily reminder")
                 .setMessage("Currently set for " + time +
-                        ". Push Log sends one reminder only when today’s total is below 10.")
+                        ". Pushup Log sends one reminder only when today’s total is below 10.")
                 .setNegativeButton("Cancel", null)
                 .setNeutralButton("Turn off", (dialog, which) -> disableReminder())
                 .setPositiveButton("Change time", (dialog, which) ->
@@ -553,7 +553,7 @@ public final class MainActivity extends Activity {
     private void showNotificationPermissionRequired() {
         new AlertDialog.Builder(this)
                 .setTitle("Allow notifications")
-                .setMessage("Push Log needs notification permission to deliver your daily reminder. No notifications are used for ads or anything else.")
+                .setMessage("Pushup Log needs notification permission to deliver your daily reminder. No notifications are used for ads or anything else.")
                 .setNegativeButton("Not now", null)
                 .setPositiveButton("Open settings", (dialog, which) ->
                         openNotificationSettings())

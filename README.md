@@ -1,31 +1,31 @@
-<p align="center"><img src="docs/icon.svg" width="128" alt="PushLog: gold push-up figure on charcoal"></p>
+<p align="center"><img src="docs/icon-preview.png" width="128" alt="Pushup Log: muscular push-up silhouette on warm gold"></p>
 
-# PushLog
+# Pushup Log
 
 **Your reps. Your progress. No interruptions.**
 
 A small, native Android push-up tracker by Thuc Nguyen. Free, open source, offline, and ad-free. No subscriptions, accounts, analytics, or Internet permission.
 
-I built PushLog because logging a few push-ups should never mean sitting through an ad or paying for a subscription. This is a personal project being improved in the open, with help from AI coding tools.
+I built Pushup Log because logging a few push-ups should never mean sitting through an ad or paying for a subscription. This is a personal project being improved in the open, with help from AI coding tools.
 
 ## What it does
 
 - Log today's total with quick −10 / +10 controls.
 - See lifetime totals, your best day, and your daily average.
 - Browse monthly history as a calendar or bar chart.
-- Set a daily reminder that only nudges you when you've logged fewer than 10 reps.
+- Use the 10 PM local-time reminder, or choose your own time. Pushup Log only nudges you when you've logged fewer than 10 reps and skips stale overnight alerts.
 - Import compatible `.puud` backups from the old Push Ups app.
-- Use a crisp vector launcher icon, including Android 13+ themed icons.
+- Use a high-resolution launcher icon based on the original Pushup Log silhouette, including Android 13+ themed icons.
 
 Android 8.0+ · Java · Android framework UI · SQLite · No third-party runtime dependencies
 
 ## Project status
 
-Early personal app, preparing for a polished public release. Not yet published on Google Play. The imported source identifies itself as version 1.3.0; there is no public release APK yet.
+Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.3 renames the app to Pushup Log, reframes the refined launcher icon around the upper body, and corrects reminder timing.
 
 Fresh installs start empty. Existing on-device records are preserved when updating with the same application ID and signing certificate. Personal workout archives and signing keys are not part of this repository.
 
-**Data care:** records stay on your phone. Export from PushLog is not implemented yet, and Android backup is disabled. Uninstalling or clearing app storage deletes your records. Import replaces the backup's entire date range, including zero or missing days, while preserving dates outside that range. Review the confirmation before importing.
+**Data care:** records stay on your phone. Export from Pushup Log is not implemented yet, and Android backup is disabled. Uninstalling or clearing app storage deletes your records. Import replaces the backup's entire date range, including zero or missing days, while preserving dates outside that range. Review the confirmation before importing.
 
 ## Build and check
 

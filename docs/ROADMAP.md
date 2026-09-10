@@ -1,4 +1,4 @@
-# PushLog: next improvements
+# Pushup Log: next improvements
 
 These are proposals based on source review, not claims of measured performance problems. The existing framework UI, background database executors, and lack of runtime dependencies are a good foundation.
 
@@ -34,7 +34,7 @@ Implement backup/export, validate upgrade preservation with the intended signing
 
 ## Changes in this initial public preparation
 
-- Replaced the rough launcher silhouette with a clean gold vector athlete and Android 13+ monochrome support.
+- Refined the original launcher silhouette at high resolution, focusing the crop on the muscular upper body and moving the head safely inward while preserving its black-on-gold identity; added Android 13+ monochrome support.
 - Removed automatic personal-history seeding; existing database contents are untouched.
 - Preserved the original archive, key, and personal backup locally; excluded them from Git and public APK contents.
 - Standardized the documented build on the Gradle wrapper and added an explicit runner for the existing Java logic tests.

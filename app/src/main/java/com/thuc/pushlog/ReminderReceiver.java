@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 public final class ReminderReceiver extends BroadcastReceiver {
     @Override
@@ -16,6 +17,12 @@ public final class ReminderReceiver extends BroadcastReceiver {
 
         // Schedule tomorrow first so a notification failure cannot break the series.
         ReminderScheduler.scheduleNext(context);
+        if (!DailyReminderLogic.isWithinDeliveryWindow(
+                ReminderPreferences.hour(context),
+                ReminderPreferences.minute(context),
+                LocalTime.now())) {
+            return;
+        }
         evaluateToday(context);
     }
 

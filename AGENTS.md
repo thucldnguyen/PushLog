@@ -1,6 +1,6 @@
-# Working on PushLog
+# Working on Pushup Log
 
-PushLog is a free, offline, ad-free native Android tracker. Preserve that product promise.
+Pushup Log is a free, offline, ad-free native Android tracker. Preserve that product promise.
 
 - Keep `com.thuc.pushlog` and the SQLite database compatible with existing installations. Never use destructive migrations.
 - Keep signing keys, workout backups, credentials, and generated APKs out of Git. `.private/` and `keystore/` are local only.

@@ -15,6 +15,7 @@ final class ReminderScheduler {
     private ReminderScheduler() {}
 
     static void scheduleNext(Context context) {
+        ReminderPreferences.migrateLegacyDefault(context);
         if (!ReminderPreferences.isEnabled(context)) {
             cancel(context);
             return;

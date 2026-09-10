@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PushLog"
+rootProject.name = "PushupLog"
 include(":app")

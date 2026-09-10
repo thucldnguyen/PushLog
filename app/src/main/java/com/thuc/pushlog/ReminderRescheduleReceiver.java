@@ -11,7 +11,7 @@ public final class ReminderRescheduleReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if (ReminderPreferences.isEnabled(context)) {
             ReminderScheduler.scheduleNext(context);
-            if (DailyReminderLogic.isDueToday(
+            if (DailyReminderLogic.isWithinDeliveryWindow(
                     ReminderPreferences.hour(context),
                     ReminderPreferences.minute(context),
                     LocalTime.now())) {

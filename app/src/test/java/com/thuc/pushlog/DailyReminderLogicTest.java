@@ -17,19 +17,25 @@ public final class DailyReminderLogicTest {
                 DailyReminderLogic.remainingPushups(20) != 0) {
             throw new AssertionError("Remaining push-up calculation is incorrect");
         }
-        if (DailyReminderLogic.isDueToday(20, 0, LocalTime.of(19, 59)) ||
-                !DailyReminderLogic.isDueToday(20, 0, LocalTime.of(20, 0)) ||
-                !DailyReminderLogic.isDueToday(20, 0, LocalTime.of(23, 0))) {
-            throw new AssertionError("Reminder due-time calculation is incorrect");
+        if (DailyReminderLogic.DEFAULT_REMINDER_HOUR != 22 ||
+                DailyReminderLogic.DEFAULT_REMINDER_MINUTE != 0) {
+            throw new AssertionError("The default reminder must be 10:00 PM");
+        }
+        if (DailyReminderLogic.isWithinDeliveryWindow(22, 0, LocalTime.of(21, 59)) ||
+                !DailyReminderLogic.isWithinDeliveryWindow(22, 0, LocalTime.of(22, 0)) ||
+                !DailyReminderLogic.isWithinDeliveryWindow(22, 0, LocalTime.of(23, 30)) ||
+                DailyReminderLogic.isWithinDeliveryWindow(22, 0, LocalTime.of(23, 31)) ||
+                DailyReminderLogic.isWithinDeliveryWindow(22, 0, LocalTime.of(3, 0))) {
+            throw new AssertionError("Reminder delivery window is incorrect");
         }
 
         ZoneId vietnam = ZoneId.of("Asia/Ho_Chi_Minh");
         Instant before = Instant.parse("2026-09-04T10:00:00Z");
-        Instant atTime = Instant.parse("2026-09-04T13:00:00Z");
-        long sameDay = DailyReminderLogic.nextTriggerMillis(20, 0, vietnam, before);
-        long nextDay = DailyReminderLogic.nextTriggerMillis(20, 0, vietnam, atTime);
-        if (sameDay != Instant.parse("2026-09-04T13:00:00Z").toEpochMilli() ||
-                nextDay != Instant.parse("2026-09-05T13:00:00Z").toEpochMilli()) {
+        Instant atTime = Instant.parse("2026-09-04T15:00:00Z");
+        long sameDay = DailyReminderLogic.nextTriggerMillis(22, 0, vietnam, before);
+        long nextDay = DailyReminderLogic.nextTriggerMillis(22, 0, vietnam, atTime);
+        if (sameDay != Instant.parse("2026-09-04T15:00:00Z").toEpochMilli() ||
+                nextDay != Instant.parse("2026-09-05T15:00:00Z").toEpochMilli()) {
             throw new AssertionError("Daily reminder scheduling is incorrect");
         }
 

@@ -11,7 +11,8 @@ final class ReminderPreferences {
     private static final String HOUR = "hour";
     private static final String MINUTE = "minute";
     private static final String LAST_HANDLED_DATE = "last_handled_date";
-    private static final int DEFAULT_HOUR = 20;
+    private static final String DEFAULT_TIME_MIGRATED = "default_time_migrated_to_22";
+    private static final int LEGACY_DEFAULT_HOUR = 20;
 
     private ReminderPreferences() {}
 
@@ -20,11 +21,27 @@ final class ReminderPreferences {
     }
 
     static int hour(Context context) {
-        return preferences(context).getInt(HOUR, DEFAULT_HOUR);
+        return preferences(context).getInt(HOUR, DailyReminderLogic.DEFAULT_REMINDER_HOUR);
     }
 
     static int minute(Context context) {
-        return preferences(context).getInt(MINUTE, 0);
+        return preferences(context).getInt(MINUTE, DailyReminderLogic.DEFAULT_REMINDER_MINUTE);
+    }
+
+    static void migrateLegacyDefault(Context context) {
+        SharedPreferences preferences = preferences(context);
+        if (preferences.getBoolean(DEFAULT_TIME_MIGRATED, false)) {
+            return;
+        }
+
+        SharedPreferences.Editor migration = preferences.edit()
+                .putBoolean(DEFAULT_TIME_MIGRATED, true);
+        if (preferences.getInt(HOUR, DailyReminderLogic.DEFAULT_REMINDER_HOUR) ==
+                LEGACY_DEFAULT_HOUR &&
+                preferences.getInt(MINUTE, DailyReminderLogic.DEFAULT_REMINDER_MINUTE) == 0) {
+            migration.putInt(HOUR, DailyReminderLogic.DEFAULT_REMINDER_HOUR);
+        }
+        migration.apply();
     }
 
     static void enable(Context context, int hour, int minute) {

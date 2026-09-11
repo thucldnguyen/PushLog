@@ -11,13 +11,28 @@ final class ReminderPreferences {
     private static final String HOUR = "hour";
     private static final String MINUTE = "minute";
     private static final String LAST_HANDLED_DATE = "last_handled_date";
+    private static final String NOTIFICATION_PERMISSION_REQUESTED =
+            "notification_permission_requested";
     private static final String DEFAULT_TIME_MIGRATED = "default_time_migrated_to_22";
     private static final int LEGACY_DEFAULT_HOUR = 20;
 
     private ReminderPreferences() {}
 
     static boolean isEnabled(Context context) {
-        return preferences(context).getBoolean(ENABLED, false);
+        return preferences(context).getBoolean(
+                ENABLED, DailyReminderLogic.DEFAULT_REMINDER_ENABLED);
+    }
+
+    static boolean shouldShowAutomaticPermissionPrompt(Context context) {
+        SharedPreferences preferences = preferences(context);
+        return isEnabled(context) &&
+                !preferences.getBoolean(NOTIFICATION_PERMISSION_REQUESTED, false);
+    }
+
+    static void markNotificationPermissionRequested(Context context) {
+        preferences(context).edit()
+                .putBoolean(NOTIFICATION_PERMISSION_REQUESTED, true)
+                .apply();
     }
 
     static int hour(Context context) {

@@ -65,7 +65,20 @@ public final class MainActivity extends Activity {
         updateReminderButton();
         if (ReminderPreferences.isEnabled(this)) {
             ReminderScheduler.scheduleNext(this);
+            requestDefaultReminderPermissionIfNeeded();
         }
+    }
+
+    private void requestDefaultReminderPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ReminderNotifier.canPost(this) ||
+                !ReminderPreferences.shouldShowAutomaticPermissionPrompt(this)) {
+            return;
+        }
+        ReminderPreferences.markNotificationPermissionRequested(this);
+        requestPermissions(
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                REQUEST_NOTIFICATIONS);
     }
 
     private void configureWindow() {
@@ -465,6 +478,7 @@ public final class MainActivity extends Activity {
             updateReminderButton();
             pendingReminderHour = hour;
             pendingReminderMinute = minute;
+            ReminderPreferences.markNotificationPermissionRequested(this);
             requestPermissions(
                     new String[]{Manifest.permission.POST_NOTIFICATIONS},
                     REQUEST_NOTIFICATIONS);
@@ -482,7 +496,18 @@ public final class MainActivity extends Activity {
         }
         if (grantResults.length > 0 &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            enablePendingReminder();
+            if (pendingReminderHour >= 0) {
+                enablePendingReminder();
+            } else {
+                ReminderScheduler.scheduleNext(this);
+                updateReminderButton();
+                Toast.makeText(
+                        this,
+                        "Daily reminder set for " + formatReminderTime(
+                                ReminderPreferences.hour(this),
+                                ReminderPreferences.minute(this)),
+                        Toast.LENGTH_SHORT).show();
+            }
         } else {
             showNotificationPermissionRequired();
         }

@@ -17,9 +17,10 @@ public final class DailyReminderLogicTest {
                 DailyReminderLogic.remainingPushups(20) != 0) {
             throw new AssertionError("Remaining push-up calculation is incorrect");
         }
-        if (DailyReminderLogic.DEFAULT_REMINDER_HOUR != 22 ||
+        if (!DailyReminderLogic.DEFAULT_REMINDER_ENABLED ||
+                DailyReminderLogic.DEFAULT_REMINDER_HOUR != 22 ||
                 DailyReminderLogic.DEFAULT_REMINDER_MINUTE != 0) {
-            throw new AssertionError("The default reminder must be 10:00 PM");
+            throw new AssertionError("The default reminder must be enabled at 10:00 PM");
         }
         if (DailyReminderLogic.isWithinDeliveryWindow(22, 0, LocalTime.of(21, 59)) ||
                 !DailyReminderLogic.isWithinDeliveryWindow(22, 0, LocalTime.of(22, 0)) ||

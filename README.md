@@ -21,7 +21,7 @@ Android 8.0+ · Java · Android framework UI · SQLite · No third-party runtime
 
 ## Project status
 
-Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.3 renames the app to Pushup Log, reframes the refined launcher icon around the upper body, and corrects reminder timing.
+Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.4 enables the 10 PM reminder by default on fresh installs while preserving a user's explicit off setting.
 
 Fresh installs start empty. Existing on-device records are preserved when updating with the same application ID and signing certificate. Personal workout archives and signing keys are not part of this repository.
 

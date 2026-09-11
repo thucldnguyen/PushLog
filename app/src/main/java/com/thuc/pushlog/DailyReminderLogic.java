@@ -7,6 +7,7 @@ import java.time.ZonedDateTime;
 
 final class DailyReminderLogic {
     static final int COMPLETION_THRESHOLD = 10;
+    static final boolean DEFAULT_REMINDER_ENABLED = true;
     static final int DEFAULT_REMINDER_HOUR = 22;
     static final int DEFAULT_REMINDER_MINUTE = 0;
     static final int MAX_DELIVERY_DELAY_MINUTES = 90;

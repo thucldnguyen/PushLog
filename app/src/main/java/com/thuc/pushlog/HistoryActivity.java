@@ -33,6 +33,9 @@ public final class HistoryActivity extends Activity {
     private static final String PREFS = "com.thuc.pushlog.history_preferences";
     private static final String PREF_BAR_CHART = "show_bar_chart";
     private static final String STATE_SELECTED_MONTH = "selected_month";
+    private static final int VISUALIZATION_HEIGHT_DP = 438;
+    private static final int CALENDAR_CELL_HEIGHT_DP = 58;
+    private static final int CALENDAR_DAY_SLOTS = 42;
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final AtomicInteger renderGeneration = new AtomicInteger();
@@ -98,7 +101,7 @@ public final class HistoryActivity extends Activity {
 
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setPadding(Ui.dp(this, 12), Ui.dp(this, 4), Ui.dp(this, 12), Ui.dp(this, 18));
+        page.setPadding(Ui.dp(this, 4), Ui.dp(this, 4), Ui.dp(this, 4), Ui.dp(this, 18));
         scroll.addView(page, Ui.matchWrap());
 
         LinearLayout navigator = new LinearLayout(this);
@@ -221,21 +224,31 @@ public final class HistoryActivity extends Activity {
         monthBody.removeAllViews();
         monthBody.addView(buildSummary(data), Ui.matchWrap());
 
+        LinearLayout visualization = new LinearLayout(this);
+        visualization.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams visualizationParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                Ui.dp(this, VISUALIZATION_HEIGHT_DP));
+        visualizationParams.topMargin = Ui.dp(this, 10);
+        monthBody.addView(visualization, visualizationParams);
+
         if (showBarChart) {
-            addBarChart(month, data);
+            addBarChart(month, data, visualization);
         } else {
-            addCalendar(month, data);
+            addCalendar(month, data, visualization);
         }
     }
 
-    private void addBarChart(YearMonth month, PushupDatabase.MonthData data) {
+    private void addBarChart(YearMonth month, PushupDatabase.MonthData data,
+                             LinearLayout visualization) {
         LinearLayout chartCard = new LinearLayout(this);
         chartCard.setOrientation(LinearLayout.VERTICAL);
         chartCard.setPadding(Ui.dp(this, 8), Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 6));
         chartCard.setBackground(Ui.rounded(Ui.CARD, 20, this));
-        LinearLayout.LayoutParams cardParams = Ui.matchWrap();
-        cardParams.topMargin = Ui.dp(this, 10);
-        monthBody.addView(chartCard, cardParams);
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
+        cardParams.bottomMargin = Ui.dp(this, 8);
+        visualization.addView(chartCard, cardParams);
 
         TextView title = Ui.title(this, "Daily push-ups", 16);
         LinearLayout.LayoutParams titleParams = Ui.matchWrap();
@@ -244,26 +257,27 @@ public final class HistoryActivity extends Activity {
 
         MonthlyBarChartView chart = new MonthlyBarChartView(this, month, data);
         LinearLayout.LayoutParams chartParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 250));
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
         chartParams.topMargin = Ui.dp(this, 2);
         chartCard.addView(chart, chartParams);
 
         TextView legend = Ui.text(this, "Horizontal axis: day  •  Vertical axis: push-ups", 12, Ui.MUTED);
         legend.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams legendParams = Ui.matchWrap();
-        legendParams.topMargin = Ui.dp(this, 8);
-        monthBody.addView(legend, legendParams);
+        visualization.addView(legend, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 36)));
     }
 
-    private void addCalendar(YearMonth month, PushupDatabase.MonthData data) {
+    private void addCalendar(YearMonth month, PushupDatabase.MonthData data,
+                             LinearLayout visualization) {
 
         GridLayout grid = new GridLayout(this);
         grid.setColumnCount(7);
+        grid.setRowCount(7);
         grid.setAlignmentMode(GridLayout.ALIGN_BOUNDS);
         grid.setUseDefaultMargins(false);
-        LinearLayout.LayoutParams gridParams = Ui.matchWrap();
-        gridParams.topMargin = Ui.dp(this, 10);
-        monthBody.addView(grid, gridParams);
+        grid.setPadding(0, Ui.dp(this, 4), 0, 0);
+        visualization.addView(grid, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
 
         String[] weekdayLabels = {"M", "T", "W", "T", "F", "S", "S"};
         String[] weekdayDescriptions = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
@@ -272,12 +286,13 @@ public final class HistoryActivity extends Activity {
             label.setTextColor(Ui.MUTED);
             label.setGravity(Gravity.CENTER);
             label.setContentDescription(weekdayDescriptions[i]);
-            grid.addView(label, gridParams(Ui.dp(this, 26), 0));
+            grid.addView(label, gridParams(Ui.dp(this, 28), Ui.dp(this, 1)));
         }
 
         int leadingBlankDays = month.atDay(1).getDayOfWeek().getValue() - 1;
         for (int i = 0; i < leadingBlankDays; i++) {
-            grid.addView(new View(this), gridParams(Ui.dp(this, 50), 0));
+            grid.addView(new View(this), gridParams(
+                    Ui.dp(this, CALENDAR_CELL_HEIGHT_DP), Ui.dp(this, 2)));
         }
 
         LocalDate today = LocalDate.now();
@@ -285,14 +300,19 @@ public final class HistoryActivity extends Activity {
             LocalDate date = month.atDay(day);
             int count = data.days.getOrDefault(date, 0);
             grid.addView(buildDayCell(date, count, data.best, date.equals(today)),
-                    gridParams(Ui.dp(this, 50), 0));
+                    gridParams(Ui.dp(this, CALENDAR_CELL_HEIGHT_DP), Ui.dp(this, 2)));
+        }
+
+        int usedSlots = leadingBlankDays + month.lengthOfMonth();
+        for (int i = usedSlots; i < CALENDAR_DAY_SLOTS; i++) {
+            grid.addView(new View(this), gridParams(
+                    Ui.dp(this, CALENDAR_CELL_HEIGHT_DP), Ui.dp(this, 2)));
         }
 
         TextView legend = Ui.text(this, "Tap a day to edit its push-up total", 12, Ui.MUTED);
         legend.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams legendParams = Ui.matchWrap();
-        legendParams.topMargin = Ui.dp(this, 8);
-        monthBody.addView(legend, legendParams);
+        visualization.addView(legend, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 36)));
     }
 
     private View buildSummary(PushupDatabase.MonthData data) {

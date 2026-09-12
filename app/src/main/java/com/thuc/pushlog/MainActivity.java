@@ -194,6 +194,28 @@ public final class MainActivity extends Activity {
         statsParams.topMargin = Ui.dp(this, 14);
         page.addView(statsCard, statsParams);
 
+        TextView author = Ui.text(
+                this,
+                "Built by Thuc Nguyen\ngithub.com/thucldnguyen/PushLog",
+                12,
+                Ui.GOLD);
+        author.setGravity(Gravity.CENTER);
+        author.setMinHeight(Ui.dp(this, 54));
+        author.setPadding(Ui.dp(this, 12), Ui.dp(this, 6),
+                Ui.dp(this, 12), Ui.dp(this, 6));
+        author.setClickable(true);
+        author.setFocusable(true);
+        author.setContentDescription(
+                "Built by Thuc Nguyen. Open the Pushup Log repository on GitHub");
+        author.setBackground(Ui.ripple(
+                this, Ui.BG, 16, android.graphics.Color.argb(45, 255, 255, 255)));
+        author.setOnClickListener(view -> startActivity(new Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://github.com/thucldnguyen/PushLog"))));
+        LinearLayout.LayoutParams authorParams = Ui.matchWrap();
+        authorParams.topMargin = Ui.dp(this, 12);
+        page.addView(author, authorParams);
+
         return screen;
     }
 

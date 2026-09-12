@@ -8,6 +8,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -20,6 +21,7 @@ final class Ui {
     static final int TEXT = Color.rgb(247, 247, 242);
     static final int MUTED = Color.rgb(166, 168, 174);
     static final int LINE = Color.rgb(61, 62, 67);
+    static final int GOLD_WASH = Color.rgb(55, 46, 25);
 
     private Ui() {}
 
@@ -83,6 +85,32 @@ final class Ui {
             button.setTextColor(TEXT);
             button.setBackground(outlinedRipple(context, CARD, LINE, 18));
         }
+        return button;
+    }
+
+    static TextView segment(Context context, String label, boolean selected) {
+        TextView button = title(context, label, 14);
+        button.setGravity(Gravity.CENTER);
+        button.setMinHeight(dp(context, 48));
+        button.setPadding(dp(context, 12), dp(context, 8), dp(context, 12), dp(context, 8));
+        button.setClickable(true);
+        button.setFocusable(true);
+        button.setTextColor(selected ? GOLD : MUTED);
+        button.setBackground(selected
+                ? outlinedRipple(context, GOLD_WASH, GOLD_DARK, 14)
+                : ripple(context, CARD, 14, Color.argb(45, 255, 255, 255)));
+        return button;
+    }
+
+    static ImageButton toolbarButton(Context context, int drawable, String description) {
+        ImageButton button = new ImageButton(context);
+        button.setImageResource(drawable);
+        button.setImageTintList(ColorStateList.valueOf(TEXT));
+        button.setContentDescription(description);
+        button.setPadding(dp(context, 12), dp(context, 12), dp(context, 12), dp(context, 12));
+        button.setBackground(ripple(context, CARD, 24, Color.argb(55, 255, 255, 255)));
+        button.setClickable(true);
+        button.setFocusable(true);
         return button;
     }
 

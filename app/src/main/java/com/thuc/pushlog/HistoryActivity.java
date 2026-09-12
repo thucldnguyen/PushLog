@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.widget.EditText;
 import android.widget.GridLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -31,13 +32,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class HistoryActivity extends Activity {
     private static final String PREFS = "com.thuc.pushlog.history_preferences";
     private static final String PREF_BAR_CHART = "show_bar_chart";
+    private static final String STATE_SELECTED_MONTH = "selected_month";
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final AtomicInteger renderGeneration = new AtomicInteger();
     private PushupDatabase database;
     private YearMonth selectedMonth = YearMonth.now();
     private TextView monthTitle;
-    private TextView viewToggle;
+    private TextView calendarTab;
+    private TextView chartTab;
     private LinearLayout monthBody;
     private boolean showBarChart;
 
@@ -51,109 +54,135 @@ public final class HistoryActivity extends Activity {
         }
         showBarChart = getSharedPreferences(PREFS, MODE_PRIVATE)
                 .getBoolean(PREF_BAR_CHART, false);
+        if (state != null && state.containsKey(STATE_SELECTED_MONTH)) {
+            selectedMonth = YearMonth.parse(state.getString(STATE_SELECTED_MONTH));
+        }
         database = new PushupDatabase(getApplicationContext());
         setContentView(buildScreen());
         renderMonth();
     }
 
     private View buildScreen() {
+        LinearLayout screen = new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        screen.setBackgroundColor(Ui.BG);
+        applySystemBarInsets(screen);
+
+        LinearLayout appBar = new LinearLayout(this);
+        appBar.setOrientation(LinearLayout.HORIZONTAL);
+        appBar.setGravity(Gravity.CENTER_VERTICAL);
+        appBar.setPadding(Ui.dp(this, 8), Ui.dp(this, 6), Ui.dp(this, 12), Ui.dp(this, 6));
+        screen.addView(appBar, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 64)));
+
+        ImageButton back = Ui.toolbarButton(this, R.drawable.ic_arrow_back, "Back");
+        back.setOnClickListener(view -> finish());
+        appBar.addView(back, new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
+
+        TextView heading = Ui.title(this, "History", 21);
+        LinearLayout.LayoutParams headingParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        headingParams.leftMargin = Ui.dp(this, 12);
+        appBar.addView(heading, headingParams);
+
+        ImageButton editDate = Ui.toolbarButton(
+                this, R.drawable.ic_edit_calendar, "Choose a date to edit");
+        editDate.setOnClickListener(view -> showDatePicker());
+        appBar.addView(editDate, new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
+
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
-        scroll.setBackgroundColor(Ui.BG);
-        applySystemBarInsets(scroll);
+        scroll.setClipToPadding(false);
+        screen.addView(scroll, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
 
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setPadding(Ui.dp(this, 18), Ui.dp(this, 14), Ui.dp(this, 18), Ui.dp(this, 28));
+        page.setPadding(Ui.dp(this, 12), Ui.dp(this, 4), Ui.dp(this, 12), Ui.dp(this, 18));
         scroll.addView(page, Ui.matchWrap());
-
-        LinearLayout top = new LinearLayout(this);
-        top.setOrientation(LinearLayout.HORIZONTAL);
-        top.setGravity(Gravity.CENTER_VERTICAL);
-        page.addView(top, Ui.matchWrap());
-
-        TextView back = Ui.iconButton(this, "←", 28);
-        back.setContentDescription("Back");
-        back.setOnClickListener(view -> finish());
-        top.addView(back, new LinearLayout.LayoutParams(Ui.dp(this, 52), Ui.dp(this, 52)));
-
-        TextView heading = Ui.title(this, "Monthly history", 24);
-        LinearLayout.LayoutParams headingParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        headingParams.leftMargin = Ui.dp(this, 14);
-        top.addView(heading, headingParams);
-
-        TextView subtitle = Ui.text(this, "Every day, including the quiet ones.", 14, Ui.MUTED);
-        LinearLayout.LayoutParams subtitleParams = Ui.matchWrap();
-        subtitleParams.topMargin = Ui.dp(this, 14);
-        page.addView(subtitle, subtitleParams);
 
         LinearLayout navigator = new LinearLayout(this);
         navigator.setOrientation(LinearLayout.HORIZONTAL);
         navigator.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams navigatorParams = Ui.matchWrap();
-        navigatorParams.topMargin = Ui.dp(this, 22);
-        page.addView(navigator, navigatorParams);
+        page.addView(navigator, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 52)));
 
-        TextView previous = Ui.iconButton(this, "‹", 32);
+        ImageButton previous = Ui.toolbarButton(
+                this, R.drawable.ic_chevron_left, "Previous month");
         previous.setContentDescription("Previous month");
         previous.setOnClickListener(view -> {
             selectedMonth = selectedMonth.minusMonths(1);
             renderMonth();
         });
-        navigator.addView(previous, new LinearLayout.LayoutParams(Ui.dp(this, 50), Ui.dp(this, 50)));
+        navigator.addView(previous, new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
 
         monthTitle = Ui.title(this, "", 20);
         monthTitle.setGravity(Gravity.CENTER);
         navigator.addView(monthTitle, new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
-        TextView next = Ui.iconButton(this, "›", 32);
+        ImageButton next = Ui.toolbarButton(
+                this, R.drawable.ic_chevron_right, "Next month");
         next.setContentDescription("Next month");
         next.setOnClickListener(view -> {
             selectedMonth = selectedMonth.plusMonths(1);
             renderMonth();
         });
-        navigator.addView(next, new LinearLayout.LayoutParams(Ui.dp(this, 50), Ui.dp(this, 50)));
+        navigator.addView(next, new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
 
-        viewToggle = Ui.action(this, "", false);
-        viewToggle.setTextColor(Ui.GOLD);
-        viewToggle.setOnClickListener(view -> {
-            showBarChart = !showBarChart;
-            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                    .putBoolean(PREF_BAR_CHART, showBarChart)
-                    .apply();
-            updateToggleLabel();
-            renderMonth();
-        });
-        updateToggleLabel();
-        LinearLayout.LayoutParams toggleParams = Ui.matchWrap();
-        toggleParams.topMargin = Ui.dp(this, 12);
-        page.addView(viewToggle, toggleParams);
-
-        TextView editDate = Ui.action(this, "Edit a date", false);
-        editDate.setContentDescription("Choose a date and edit its push-up total");
-        editDate.setOnClickListener(view -> showDatePicker());
-        LinearLayout.LayoutParams editDateParams = Ui.matchWrap();
-        editDateParams.topMargin = Ui.dp(this, 10);
-        page.addView(editDate, editDateParams);
+        LinearLayout viewSelector = new LinearLayout(this);
+        viewSelector.setOrientation(LinearLayout.HORIZONTAL);
+        viewSelector.setPadding(Ui.dp(this, 2), Ui.dp(this, 2), Ui.dp(this, 2), Ui.dp(this, 2));
+        viewSelector.setBackground(Ui.rounded(Ui.CARD, 16, this));
+        calendarTab = Ui.segment(this, "Calendar", !showBarChart);
+        calendarTab.setContentDescription("Show calendar view");
+        calendarTab.setOnClickListener(view -> setBarChartVisible(false));
+        viewSelector.addView(calendarTab, new LinearLayout.LayoutParams(
+                0, Ui.dp(this, 48), 1f));
+        chartTab = Ui.segment(this, "Chart", showBarChart);
+        chartTab.setContentDescription("Show bar chart view");
+        chartTab.setOnClickListener(view -> setBarChartVisible(true));
+        LinearLayout.LayoutParams chartTabParams = new LinearLayout.LayoutParams(
+                0, Ui.dp(this, 48), 1f);
+        chartTabParams.leftMargin = Ui.dp(this, 2);
+        viewSelector.addView(chartTab, chartTabParams);
+        page.addView(viewSelector, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 52)));
 
         monthBody = new LinearLayout(this);
         monthBody.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams bodyParams = Ui.matchWrap();
-        bodyParams.topMargin = Ui.dp(this, 14);
+        bodyParams.topMargin = Ui.dp(this, 10);
         page.addView(monthBody, bodyParams);
-        return scroll;
+        return screen;
     }
 
-    private void updateToggleLabel() {
-        if (viewToggle == null) {
+    private void setBarChartVisible(boolean visible) {
+        if (showBarChart == visible) {
             return;
         }
-        viewToggle.setText(showBarChart ? "View as calendar" : "View as bar chart");
-        viewToggle.setContentDescription(showBarChart
-                ? "Switch monthly history to calendar view"
-                : "Switch monthly history to bar chart view");
+        showBarChart = visible;
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putBoolean(PREF_BAR_CHART, showBarChart)
+                .apply();
+        updateViewSelector();
+        renderMonth();
+    }
+
+    private void updateViewSelector() {
+        if (calendarTab == null || chartTab == null) {
+            return;
+        }
+        calendarTab.setTextColor(showBarChart ? Ui.MUTED : Ui.GOLD);
+        calendarTab.setBackground(showBarChart
+                ? Ui.ripple(this, Ui.CARD, 14, Color.argb(45, 255, 255, 255))
+                : Ui.outlinedRipple(this, Ui.GOLD_WASH, Ui.GOLD_DARK, 14));
+        calendarTab.setSelected(!showBarChart);
+        chartTab.setTextColor(showBarChart ? Ui.GOLD : Ui.MUTED);
+        chartTab.setBackground(showBarChart
+                ? Ui.outlinedRipple(this, Ui.GOLD_WASH, Ui.GOLD_DARK, 14)
+                : Ui.ripple(this, Ui.CARD, 14, Color.argb(45, 255, 255, 255)));
+        chartTab.setSelected(showBarChart);
     }
 
     private void applySystemBarInsets(View root) {
@@ -202,10 +231,10 @@ public final class HistoryActivity extends Activity {
     private void addBarChart(YearMonth month, PushupDatabase.MonthData data) {
         LinearLayout chartCard = new LinearLayout(this);
         chartCard.setOrientation(LinearLayout.VERTICAL);
-        chartCard.setPadding(Ui.dp(this, 10), Ui.dp(this, 14), Ui.dp(this, 10), Ui.dp(this, 8));
+        chartCard.setPadding(Ui.dp(this, 8), Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 6));
         chartCard.setBackground(Ui.rounded(Ui.CARD, 20, this));
         LinearLayout.LayoutParams cardParams = Ui.matchWrap();
-        cardParams.topMargin = Ui.dp(this, 16);
+        cardParams.topMargin = Ui.dp(this, 10);
         monthBody.addView(chartCard, cardParams);
 
         TextView title = Ui.title(this, "Daily push-ups", 16);
@@ -213,22 +242,16 @@ public final class HistoryActivity extends Activity {
         titleParams.leftMargin = Ui.dp(this, 8);
         chartCard.addView(title, titleParams);
 
-        TextView subtitle = Ui.text(this, "Every bar starts at zero", 12, Ui.MUTED);
-        LinearLayout.LayoutParams subtitleParams = Ui.matchWrap();
-        subtitleParams.leftMargin = Ui.dp(this, 8);
-        subtitleParams.topMargin = Ui.dp(this, 2);
-        chartCard.addView(subtitle, subtitleParams);
-
         MonthlyBarChartView chart = new MonthlyBarChartView(this, month, data);
         LinearLayout.LayoutParams chartParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 270));
-        chartParams.topMargin = Ui.dp(this, 4);
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 250));
+        chartParams.topMargin = Ui.dp(this, 2);
         chartCard.addView(chart, chartParams);
 
         TextView legend = Ui.text(this, "Horizontal axis: day  •  Vertical axis: push-ups", 12, Ui.MUTED);
         legend.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams legendParams = Ui.matchWrap();
-        legendParams.topMargin = Ui.dp(this, 12);
+        legendParams.topMargin = Ui.dp(this, 8);
         monthBody.addView(legend, legendParams);
     }
 
@@ -239,7 +262,7 @@ public final class HistoryActivity extends Activity {
         grid.setAlignmentMode(GridLayout.ALIGN_BOUNDS);
         grid.setUseDefaultMargins(false);
         LinearLayout.LayoutParams gridParams = Ui.matchWrap();
-        gridParams.topMargin = Ui.dp(this, 16);
+        gridParams.topMargin = Ui.dp(this, 10);
         monthBody.addView(grid, gridParams);
 
         String[] weekdayLabels = {"M", "T", "W", "T", "F", "S", "S"};
@@ -249,12 +272,12 @@ public final class HistoryActivity extends Activity {
             label.setTextColor(Ui.MUTED);
             label.setGravity(Gravity.CENTER);
             label.setContentDescription(weekdayDescriptions[i]);
-            grid.addView(label, gridParams(Ui.dp(this, 30), Ui.dp(this, 2)));
+            grid.addView(label, gridParams(Ui.dp(this, 26), 0));
         }
 
         int leadingBlankDays = month.atDay(1).getDayOfWeek().getValue() - 1;
         for (int i = 0; i < leadingBlankDays; i++) {
-            grid.addView(new View(this), gridParams(Ui.dp(this, 66), Ui.dp(this, 2)));
+            grid.addView(new View(this), gridParams(Ui.dp(this, 50), 0));
         }
 
         LocalDate today = LocalDate.now();
@@ -262,13 +285,13 @@ public final class HistoryActivity extends Activity {
             LocalDate date = month.atDay(day);
             int count = data.days.getOrDefault(date, 0);
             grid.addView(buildDayCell(date, count, data.best, date.equals(today)),
-                    gridParams(Ui.dp(this, 66), Ui.dp(this, 2)));
+                    gridParams(Ui.dp(this, 50), 0));
         }
 
         TextView legend = Ui.text(this, "Tap a day to edit its push-up total", 12, Ui.MUTED);
         legend.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams legendParams = Ui.matchWrap();
-        legendParams.topMargin = Ui.dp(this, 14);
+        legendParams.topMargin = Ui.dp(this, 8);
         monthBody.addView(legend, legendParams);
     }
 
@@ -276,7 +299,7 @@ public final class HistoryActivity extends Activity {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.HORIZONTAL);
         card.setGravity(Gravity.CENTER_VERTICAL);
-        card.setPadding(Ui.dp(this, 6), Ui.dp(this, 16), Ui.dp(this, 6), Ui.dp(this, 16));
+        card.setPadding(Ui.dp(this, 6), Ui.dp(this, 11), Ui.dp(this, 6), Ui.dp(this, 11));
         card.setBackground(Ui.rounded(Ui.CARD, 20, this));
         addSummaryStat(card, NumberFormat.getIntegerInstance().format(data.total), "MONTH TOTAL");
         addSummaryStat(card, NumberFormat.getIntegerInstance().format(data.best), "BEST DAY");
@@ -288,7 +311,7 @@ public final class HistoryActivity extends Activity {
         LinearLayout block = new LinearLayout(this);
         block.setOrientation(LinearLayout.VERTICAL);
         block.setGravity(Gravity.CENTER);
-        TextView number = Ui.title(this, value, 20);
+        TextView number = Ui.title(this, value, 19);
         number.setGravity(Gravity.CENTER);
         block.addView(number);
         TextView caption = Ui.text(this, label, 9, Ui.MUTED);
@@ -305,7 +328,7 @@ public final class HistoryActivity extends Activity {
         LinearLayout cell = new LinearLayout(this);
         cell.setOrientation(LinearLayout.VERTICAL);
         cell.setGravity(Gravity.CENTER);
-        cell.setPadding(Ui.dp(this, 2), Ui.dp(this, 6), Ui.dp(this, 2), Ui.dp(this, 6));
+        cell.setPadding(Ui.dp(this, 1), Ui.dp(this, 4), Ui.dp(this, 1), Ui.dp(this, 4));
 
         int fill = Ui.CARD;
         if (count > 0) {
@@ -316,8 +339,8 @@ public final class HistoryActivity extends Activity {
             fill = Color.rgb(red, green, blue);
         }
         cell.setBackground(isToday
-                ? Ui.outlined(fill, Ui.GOLD, 13, this)
-                : Ui.rounded(fill, 13, this));
+                ? Ui.outlined(fill, Ui.GOLD, 10, this)
+                : Ui.rounded(fill, 10, this));
 
         TextView day = Ui.title(this, Integer.toString(date.getDayOfMonth()), 13);
         day.setGravity(Gravity.CENTER);
@@ -329,7 +352,7 @@ public final class HistoryActivity extends Activity {
         value.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         value.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams valueParams = Ui.matchWrap();
-        valueParams.topMargin = Ui.dp(this, 4);
+        valueParams.topMargin = Ui.dp(this, 1);
         cell.addView(value, valueParams);
         cell.setContentDescription(date.format(DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())) +
                 ": " + count + " push-ups" +
@@ -454,6 +477,12 @@ public final class HistoryActivity extends Activity {
         params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
         params.setMargins(margin, margin, margin, margin);
         return params;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle state) {
+        state.putString(STATE_SELECTED_MONTH, selectedMonth.toString());
+        super.onSaveInstanceState(state);
     }
 
     @Override

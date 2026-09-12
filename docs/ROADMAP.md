@@ -13,8 +13,8 @@ These are proposals based on source review, not claims of measured performance p
 
 ## 2. Make the UI feel finished
 
-- Retain the charcoal-and-gold identity and use consistent spacing, typography, and button hierarchy.
-- Add an intentional empty state, clearer import feedback, and a subtle save confirmation.
+- Continue refining the charcoal-and-gold identity and the compact native screen hierarchy introduced in 1.3.6.
+- Add an intentional empty state and clearer import progress; logging now provides immediate save confirmation.
 - Extract hardcoded UI strings into resources; verify TalkBack, large font sizes, landscape, contrast, and 48 dp touch targets.
 - Add light/system appearance only after the dark UI is consistent.
 - Preview the new icon on circle, squircle, rounded-square, and themed launchers. Artwork follows [Android adaptive-icon guidance](https://developer.android.com/codelabs/basic-android-kotlin-compose-training-change-app-icon).
@@ -23,7 +23,7 @@ These are proposals based on source review, not claims of measured performance p
 
 - Measure cold start and history navigation on a modest phone before introducing architectural changes.
 - Cache chart labels and daily values outside `MonthlyBarChartView.onDraw`; it currently creates number formatters, date objects, and label strings during each draw. This is a small optimization candidate, not a demonstrated bottleneck.
-- Size the large hero image to its actual display needs and compare WebP quality and APK savings before replacing it.
+- Keep decorative media out of the core dashboard so the primary state and action remain visible without routine scrolling.
 - Retain background database work; consider a small repository layer to centralize errors and lifecycle handling as features grow.
 - Avoid caching all-time statistics until profiling justifies the invalidation complexity. Existing date-keyed month queries are appropriate for this data size.
 - Evaluate release shrinking with release-build smoke checks and measured APK/startup comparisons.

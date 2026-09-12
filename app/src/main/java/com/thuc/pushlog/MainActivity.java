@@ -14,8 +14,9 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,7 +41,6 @@ public final class MainActivity extends Activity {
     private TextView averageValue;
     private TextView todayValue;
     private TextView todayDate;
-    private TextView reminderButton;
     private int pendingReminderHour = -1;
     private int pendingReminderMinute = -1;
 
@@ -62,7 +62,6 @@ public final class MainActivity extends Activity {
         if (pendingReminderHour >= 0 && ReminderNotifier.canPost(this)) {
             enablePendingReminder();
         }
-        updateReminderButton();
         if (ReminderPreferences.isEnabled(this)) {
             ReminderScheduler.scheduleNext(this);
             requestDefaultReminderPermissionIfNeeded();
@@ -91,124 +90,128 @@ public final class MainActivity extends Activity {
     }
 
     private View buildHome() {
+        LinearLayout screen = new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        screen.setBackgroundColor(Ui.BG);
+        applySystemBarInsets(screen);
+
+        LinearLayout appBar = new LinearLayout(this);
+        appBar.setOrientation(LinearLayout.HORIZONTAL);
+        appBar.setGravity(Gravity.CENTER_VERTICAL);
+        appBar.setPadding(Ui.dp(this, 20), Ui.dp(this, 6), Ui.dp(this, 12), Ui.dp(this, 6));
+        screen.addView(appBar, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 64)));
+
+        LinearLayout identity = new LinearLayout(this);
+        identity.setOrientation(LinearLayout.VERTICAL);
+        TextView appName = Ui.title(this, "Pushup Log", 21);
+        identity.addView(appName);
+        TextView privateLabel = Ui.text(this, "Private on this phone", 12, Ui.MUTED);
+        LinearLayout.LayoutParams privateParams = Ui.matchWrap();
+        privateParams.topMargin = Ui.dp(this, 1);
+        identity.addView(privateLabel, privateParams);
+        appBar.addView(identity, new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+        ImageButton history = Ui.toolbarButton(
+                this, R.drawable.ic_history, "Open monthly history");
+        history.setOnClickListener(view ->
+                startActivity(new Intent(this, HistoryActivity.class)));
+        appBar.addView(history, new LinearLayout.LayoutParams(
+                Ui.dp(this, 48), Ui.dp(this, 48)));
+
+        ImageButton more = Ui.toolbarButton(this, R.drawable.ic_more_vert, "More options");
+        more.setOnClickListener(this::showMoreMenu);
+        LinearLayout.LayoutParams moreParams = new LinearLayout.LayoutParams(
+                Ui.dp(this, 48), Ui.dp(this, 48));
+        moreParams.leftMargin = Ui.dp(this, 4);
+        appBar.addView(more, moreParams);
+
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
-        scroll.setBackgroundColor(Ui.BG);
         scroll.setClipToPadding(false);
-        applySystemBarInsets(scroll);
+        screen.addView(scroll, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
 
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setPadding(Ui.dp(this, 22), Ui.dp(this, 20), Ui.dp(this, 22), Ui.dp(this, 28));
+        page.setGravity(Gravity.CENTER_HORIZONTAL);
+        page.setPadding(Ui.dp(this, 22), Ui.dp(this, 10), Ui.dp(this, 22), Ui.dp(this, 20));
         scroll.addView(page, Ui.matchWrap());
 
-        TextView eyebrow = Ui.title(this, "PUSH LOG", 14);
-        eyebrow.setTextColor(Ui.GOLD);
-        eyebrow.setLetterSpacing(0.16f);
-        page.addView(eyebrow);
+        LinearLayout todayCard = new LinearLayout(this);
+        todayCard.setOrientation(LinearLayout.VERTICAL);
+        todayCard.setGravity(Gravity.CENTER);
+        todayCard.setPadding(Ui.dp(this, 18), Ui.dp(this, 18), Ui.dp(this, 18), Ui.dp(this, 18));
+        todayCard.setBackground(Ui.outlined(Ui.CARD_ALT, Ui.LINE, 24, this));
+        LinearLayout.LayoutParams todayCardParams = Ui.matchWrap();
+        page.addView(todayCard, todayCardParams);
 
-        TextView headline = Ui.title(this, "Show up. Add it up.", 28);
-        LinearLayout.LayoutParams headlineParams = Ui.matchWrap();
-        headlineParams.topMargin = Ui.dp(this, 4);
-        page.addView(headline, headlineParams);
+        todayDate = Ui.title(this, "TODAY", 13);
+        todayDate.setTextColor(Ui.GOLD);
+        todayDate.setLetterSpacing(0.10f);
+        todayDate.setGravity(Gravity.CENTER);
+        todayCard.addView(todayDate, Ui.matchWrap());
 
-        TextView subhead = Ui.text(this, "Your push-ups, stored privately on this phone.", 14, Ui.MUTED);
-        LinearLayout.LayoutParams subheadParams = Ui.matchWrap();
-        subheadParams.topMargin = Ui.dp(this, 6);
-        page.addView(subhead, subheadParams);
+        todayValue = Ui.title(this, "—", 64);
+        todayValue.setGravity(Gravity.CENTER);
+        todayValue.setContentDescription("Today's push-up total");
+        LinearLayout.LayoutParams valueParams = Ui.matchWrap();
+        valueParams.topMargin = Ui.dp(this, 2);
+        todayCard.addView(todayValue, valueParams);
 
-        ImageView hero = new ImageView(this);
-        hero.setImageResource(R.drawable.hero_pushup);
-        hero.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        hero.setAdjustViewBounds(true);
-        hero.setContentDescription("Illustration of a man holding a push-up position");
-        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 224));
-        heroParams.topMargin = Ui.dp(this, 8);
-        heroParams.bottomMargin = Ui.dp(this, 8);
-        page.addView(hero, heroParams);
+        TextView todayCaption = Ui.text(this, "push-ups completed", 14, Ui.MUTED);
+        todayCaption.setGravity(Gravity.CENTER);
+        todayCard.addView(todayCaption, Ui.matchWrap());
+
+        TextView logButton = Ui.action(this, "Log push-ups", true);
+        logButton.setContentDescription("Log today's push-ups");
+        logButton.setOnClickListener(view -> loadAndShowLogDialog());
+        LinearLayout.LayoutParams logParams = Ui.matchWrap();
+        logParams.topMargin = Ui.dp(this, 14);
+        page.addView(logButton, logParams);
 
         LinearLayout statsCard = new LinearLayout(this);
         statsCard.setOrientation(LinearLayout.HORIZONTAL);
         statsCard.setGravity(Gravity.CENTER_VERTICAL);
-        statsCard.setPadding(Ui.dp(this, 8), Ui.dp(this, 18), Ui.dp(this, 8), Ui.dp(this, 18));
-        statsCard.setBackground(Ui.rounded(Ui.CARD, 22, this));
+        statsCard.setPadding(Ui.dp(this, 6), Ui.dp(this, 14), Ui.dp(this, 6), Ui.dp(this, 14));
+        statsCard.setBackground(Ui.rounded(Ui.CARD, 20, this));
         totalValue = addStat(statsCard, "—", "ALL TIME");
         addDivider(statsCard);
         bestValue = addStat(statsCard, "—", "BEST DAY");
         addDivider(statsCard);
         averageValue = addStat(statsCard, "—", "DAILY AVG");
-        page.addView(statsCard, Ui.matchWrap());
+        LinearLayout.LayoutParams statsParams = Ui.matchWrap();
+        statsParams.topMargin = Ui.dp(this, 14);
+        page.addView(statsCard, statsParams);
 
-        LinearLayout todayCard = new LinearLayout(this);
-        todayCard.setOrientation(LinearLayout.HORIZONTAL);
-        todayCard.setGravity(Gravity.CENTER_VERTICAL);
-        todayCard.setPadding(Ui.dp(this, 18), Ui.dp(this, 16), Ui.dp(this, 18), Ui.dp(this, 16));
-        todayCard.setBackground(Ui.outlined(Ui.CARD_ALT, Ui.LINE, 20, this));
-        LinearLayout.LayoutParams todayCardParams = Ui.matchWrap();
-        todayCardParams.topMargin = Ui.dp(this, 12);
-        page.addView(todayCard, todayCardParams);
+        return screen;
+    }
 
-        LinearLayout todayCopy = new LinearLayout(this);
-        todayCopy.setOrientation(LinearLayout.VERTICAL);
-        todayDate = Ui.title(this, "TODAY", 13);
-        todayDate.setTextColor(Ui.GOLD);
-        todayDate.setLetterSpacing(0.10f);
-        todayCopy.addView(todayDate);
-        TextView todayCaption = Ui.text(this, "push-ups completed", 14, Ui.MUTED);
-        LinearLayout.LayoutParams captionParams = Ui.matchWrap();
-        captionParams.topMargin = Ui.dp(this, 3);
-        todayCopy.addView(todayCaption, captionParams);
-        todayCard.addView(todayCopy, new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+    private void showMoreMenu(View anchor) {
+        PopupMenu menu = new PopupMenu(this, anchor);
+        menu.getMenu().add(0, 1, 0, reminderMenuLabel());
+        menu.getMenu().add(0, 2, 1, "Import old app data (.puud)");
+        menu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 1) {
+                openReminderSettings();
+            } else {
+                openBackupPicker();
+            }
+            return true;
+        });
+        menu.show();
+    }
 
-        todayValue = Ui.title(this, "—", 34);
-        todayValue.setGravity(Gravity.END);
-        todayCard.addView(todayValue);
-
-        TextView logButton = Ui.action(this, "+  Log today’s push-ups", true);
-        logButton.setContentDescription("Log today's push-ups");
-        logButton.setOnClickListener(view -> loadAndShowLogDialog());
-        LinearLayout.LayoutParams logParams = Ui.matchWrap();
-        logParams.topMargin = Ui.dp(this, 16);
-        page.addView(logButton, logParams);
-
-        TextView historyButton = Ui.action(this, "View monthly history", false);
-        historyButton.setOnClickListener(view ->
-                startActivity(new Intent(this, HistoryActivity.class)));
-        LinearLayout.LayoutParams historyParams = Ui.matchWrap();
-        historyParams.topMargin = Ui.dp(this, 10);
-        page.addView(historyButton, historyParams);
-
-        reminderButton = Ui.action(this, "Daily reminder  ·  Off", false);
-        reminderButton.setOnClickListener(view -> openReminderSettings());
-        LinearLayout.LayoutParams reminderParams = Ui.matchWrap();
-        reminderParams.topMargin = Ui.dp(this, 10);
-        page.addView(reminderButton, reminderParams);
-
-        TextView reminderHint = Ui.text(
-                this, "One alert at your chosen time—only when today is below 10.",
-                12, Ui.MUTED);
-        reminderHint.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams reminderHintParams = Ui.matchWrap();
-        reminderHintParams.topMargin = Ui.dp(this, 7);
-        page.addView(reminderHint, reminderHintParams);
-
-        TextView importButton = Ui.action(this, "Import old app data (.puud)", false);
-        importButton.setTextColor(Ui.GOLD);
-        importButton.setOnClickListener(view -> openBackupPicker());
-        LinearLayout.LayoutParams importParams = Ui.matchWrap();
-        importParams.topMargin = Ui.dp(this, 22);
-        page.addView(importButton, importParams);
-
-        TextView privacy = Ui.text(this, "NO ADS  •  NO ACCOUNT  •  NO INTERNET ACCESS", 11, Ui.MUTED);
-        privacy.setLetterSpacing(0.09f);
-        privacy.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams privacyParams = Ui.matchWrap();
-        privacyParams.topMargin = Ui.dp(this, 14);
-        page.addView(privacy, privacyParams);
-
-        return scroll;
+    private String reminderMenuLabel() {
+        if (!ReminderPreferences.isEnabled(this)) {
+            return "Daily reminder · Off";
+        }
+        if (!ReminderNotifier.canPost(this)) {
+            return "Daily reminder · Permission needed";
+        }
+        return "Daily reminder · " + formatReminderTime(
+                ReminderPreferences.hour(this), ReminderPreferences.minute(this));
     }
 
     private void applySystemBarInsets(View root) {
@@ -351,6 +354,7 @@ public final class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     dialog.dismiss();
                     refreshDashboard();
+                    Toast.makeText(this, "Today’s total updated", Toast.LENGTH_SHORT).show();
                 });
             } catch (Exception failure) {
                 runOnUiThread(() -> {
@@ -475,7 +479,6 @@ public final class MainActivity extends Activity {
             // system settings or the activity is recreated during permission flow.
             ReminderPreferences.enable(this, hour, minute);
             ReminderScheduler.scheduleNext(this);
-            updateReminderButton();
             pendingReminderHour = hour;
             pendingReminderMinute = minute;
             ReminderPreferences.markNotificationPermissionRequested(this);
@@ -500,7 +503,6 @@ public final class MainActivity extends Activity {
                 enablePendingReminder();
             } else {
                 ReminderScheduler.scheduleNext(this);
-                updateReminderButton();
                 Toast.makeText(
                         this,
                         "Daily reminder set for " + formatReminderTime(
@@ -527,7 +529,6 @@ public final class MainActivity extends Activity {
     private void enableReminder(int hour, int minute) {
         ReminderPreferences.enable(this, hour, minute);
         ReminderScheduler.scheduleNext(this);
-        updateReminderButton();
         Toast.makeText(
                 this,
                 "Reminder set for " + formatReminderTime(hour, minute),
@@ -541,29 +542,7 @@ public final class MainActivity extends Activity {
         ReminderPreferences.disable(this);
         ReminderScheduler.cancel(this);
         ReminderNotifier.cancel(this);
-        updateReminderButton();
         Toast.makeText(this, "Daily reminder turned off", Toast.LENGTH_SHORT).show();
-    }
-
-    private void updateReminderButton() {
-        if (reminderButton == null) {
-            return;
-        }
-        if (!ReminderPreferences.isEnabled(this)) {
-            reminderButton.setText("Daily reminder  ·  Off");
-            reminderButton.setContentDescription("Set daily push-up reminder");
-            return;
-        }
-        if (!ReminderNotifier.canPost(this)) {
-            reminderButton.setText("Daily reminder  ·  Permission needed");
-            reminderButton.setContentDescription(
-                    "Daily push-up reminder needs notification permission");
-            return;
-        }
-        String time = formatReminderTime(
-                ReminderPreferences.hour(this), ReminderPreferences.minute(this));
-        reminderButton.setText("Daily reminder  ·  " + time);
-        reminderButton.setContentDescription("Daily push-up reminder set for " + time);
     }
 
     private String formatReminderTime(int hour, int minute) {

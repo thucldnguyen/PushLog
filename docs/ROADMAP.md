@@ -5,7 +5,7 @@ These are proposals based on source review, not claims of measured performance p
 ## 1. Protect records and make core actions complete
 
 - **Backup and restore first.** Add a versioned export format through Android's document picker, with a round-trip test and clear restore preview. Current imports only read the old app's format; Android backup is disabled.
-- **Flexible logging.** Keep +10 as the fast path, add +1 and direct numeric entry, and allow correcting past dates. Preserve the distinction between adding a set and replacing a daily total.
+- **Flexible logging.** Keep +10 as the fast path and add +1 and direct numeric entry for today. Past-date correction now replaces the selected daily total explicitly.
 - **Date boundaries.** Capture the edited date when opening the log dialog; `saveTodayTotal` currently resolves today's date again on save. Test a dialog left open over midnight.
 - **Database errors.** Check `insertWithOnConflict` results so import transactions cannot report success after a failed insertion. Add rollback tests with synthetic data.
 - **Lifecycle coverage.** Test rotation and leaving the screen during load/save/import. Some asynchronous callbacks are guarded, but dialog callbacks need a consistent lifecycle approach.
@@ -34,6 +34,7 @@ Implement backup/export, validate upgrade preservation with the intended signing
 
 ## Changes in this initial public preparation
 
+- Added past-date correction from both calendar and bar-chart history views, with direct numeric entry and future-date protection.
 - Refined the original launcher silhouette at high resolution, focusing the crop on the muscular upper body and moving the head safely inward while preserving its black-on-gold identity; added Android 13+ monochrome support.
 - Removed automatic personal-history seeding; existing database contents are untouched.
 - Preserved the original archive, key, and personal backup locally; excluded them from Git and public APK contents.

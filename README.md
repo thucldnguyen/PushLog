@@ -13,6 +13,7 @@ I built Pushup Log because logging a few push-ups should never mean sitting thro
 - Log today's total with quick −10 / +10 controls.
 - See lifetime totals, your best day, and your daily average.
 - Browse monthly history as a calendar or bar chart.
+- Correct a missed or mistaken total on any past date from monthly history.
 - Use the 10 PM local-time reminder, or choose your own time. Pushup Log only nudges you when you've logged fewer than 10 reps and skips stale overnight alerts.
 - Import compatible `.puud` backups from the old Push Ups app.
 - Use a high-resolution launcher icon based on the original Pushup Log silhouette, including Android 13+ themed icons.
@@ -21,7 +22,7 @@ Android 8.0+ · Java · Android framework UI · SQLite · No third-party runtime
 
 ## Project status
 
-Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.4 enables the 10 PM reminder by default on fresh installs while preserving a user's explicit off setting.
+Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.5 adds editing for past daily totals from monthly history.
 
 Fresh installs start empty. Existing on-device records are preserved when updating with the same application ID and signing certificate. Personal workout archives and signing keys are not part of this repository.
 

@@ -1,17 +1,22 @@
 package com.thuc.pushlog;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -125,6 +130,13 @@ public final class HistoryActivity extends Activity {
         LinearLayout.LayoutParams toggleParams = Ui.matchWrap();
         toggleParams.topMargin = Ui.dp(this, 12);
         page.addView(viewToggle, toggleParams);
+
+        TextView editDate = Ui.action(this, "Edit a date", false);
+        editDate.setContentDescription("Choose a date and edit its push-up total");
+        editDate.setOnClickListener(view -> showDatePicker());
+        LinearLayout.LayoutParams editDateParams = Ui.matchWrap();
+        editDateParams.topMargin = Ui.dp(this, 10);
+        page.addView(editDate, editDateParams);
 
         monthBody = new LinearLayout(this);
         monthBody.setOrientation(LinearLayout.VERTICAL);
@@ -253,7 +265,7 @@ public final class HistoryActivity extends Activity {
                     gridParams(Ui.dp(this, 66), Ui.dp(this, 2)));
         }
 
-        TextView legend = Ui.text(this, "Top number: date  •  Bottom number: push-ups", 12, Ui.MUTED);
+        TextView legend = Ui.text(this, "Tap a day to edit its push-up total", 12, Ui.MUTED);
         legend.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams legendParams = Ui.matchWrap();
         legendParams.topMargin = Ui.dp(this, 14);
@@ -320,8 +332,119 @@ public final class HistoryActivity extends Activity {
         valueParams.topMargin = Ui.dp(this, 4);
         cell.addView(value, valueParams);
         cell.setContentDescription(date.format(DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())) +
-                ": " + count + " push-ups");
+                ": " + count + " push-ups" +
+                (date.isAfter(LocalDate.now()) ? "" : ". Tap to edit"));
+        if (!date.isAfter(LocalDate.now())) {
+            cell.setClickable(true);
+            cell.setFocusable(true);
+            cell.setOnClickListener(view -> showEditDialog(date, count));
+        } else {
+            cell.setAlpha(0.55f);
+        }
         return cell;
+    }
+
+    private void showDatePicker() {
+        LocalDate today = LocalDate.now();
+        LocalDate initial = selectedMonth.isAfter(YearMonth.from(today))
+                ? today
+                : selectedMonth.atDay(Math.min(today.getDayOfMonth(), selectedMonth.lengthOfMonth()));
+        DatePickerDialog picker = new DatePickerDialog(
+                this,
+                (view, year, month, day) -> loadAndShowEditDialog(
+                        LocalDate.of(year, month + 1, day)),
+                initial.getYear(),
+                initial.getMonthValue() - 1,
+                initial.getDayOfMonth());
+        picker.getDatePicker().setMaxDate(System.currentTimeMillis());
+        picker.show();
+    }
+
+    private void loadAndShowEditDialog(LocalDate date) {
+        io.execute(() -> {
+            int count = database.getCount(date);
+            runOnUiThread(() -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    showEditDialog(date, count);
+                }
+            });
+        });
+    }
+
+    private void showEditDialog(LocalDate date, int currentCount) {
+        if (date.isAfter(LocalDate.now())) {
+            return;
+        }
+        EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setText(Integer.toString(currentCount));
+        input.setSelectAllOnFocus(true);
+        input.setSingleLine(true);
+        input.setContentDescription("Push-up total for " + date);
+        LinearLayout inputContainer = new LinearLayout(this);
+        inputContainer.setPadding(Ui.dp(this, 24), Ui.dp(this, 4),
+                Ui.dp(this, 24), Ui.dp(this, 4));
+        inputContainer.addView(input, Ui.matchWrap());
+
+        String title = date.format(DateTimeFormatter.ofPattern(
+                "EEEE, MMMM d", Locale.getDefault()));
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage("Enter the total push-ups completed on this date. Use 0 to clear it.")
+                .setView(inputContainer)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Save", null)
+                .create();
+        dialog.setOnShowListener(ignored -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Ui.GOLD);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+                final int count;
+                try {
+                    count = DailyCountInput.parse(input.getText().toString());
+                } catch (IllegalArgumentException invalid) {
+                    input.setError(invalid.getMessage());
+                    return;
+                }
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                saveDate(date, count, dialog);
+            });
+        });
+        dialog.show();
+    }
+
+    private void saveDate(LocalDate date, int count, AlertDialog dialog) {
+        io.execute(() -> {
+            try {
+                database.setCount(date, count);
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    if (date.equals(LocalDate.now()) &&
+                            count >= DailyReminderLogic.COMPLETION_THRESHOLD) {
+                        ReminderNotifier.cancel(this);
+                    }
+                    dialog.dismiss();
+                    selectedMonth = YearMonth.from(date);
+                    renderMonth();
+                    Toast.makeText(this, "Push-up total updated", Toast.LENGTH_SHORT).show();
+                });
+            } catch (Exception failure) {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                    showSaveError(failure.getMessage());
+                });
+            }
+        });
+    }
+
+    private void showSaveError(String message) {
+        Toast.makeText(this,
+                message == null ? "The total could not be saved" : message,
+                Toast.LENGTH_LONG).show();
     }
 
     private GridLayout.LayoutParams gridParams(int height, int margin) {

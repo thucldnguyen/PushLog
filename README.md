@@ -22,7 +22,7 @@ Android 8.0+ · Java · Android framework UI · SQLite · No third-party runtime
 
 ## Project status
 
-Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.10 gives calendar and chart history an equal-height visualization region, spaces calendar days across six stable rows, and includes subtle author attribution on the balanced home dashboard.
+Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.11 promotes History to an equal-size secondary action below logging and limits the subtle GitHub footer link to the small “GitHub” label.
 
 Fresh installs start empty. Existing on-device records are preserved when updating with the same application ID and signing certificate. Personal workout archives and signing keys are not part of this repository.
 

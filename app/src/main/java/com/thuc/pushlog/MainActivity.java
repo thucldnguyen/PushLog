@@ -114,19 +114,10 @@ public final class MainActivity extends Activity {
         appBar.addView(identity, new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
-        ImageButton history = Ui.toolbarButton(
-                this, R.drawable.ic_history, "Open monthly history");
-        history.setOnClickListener(view ->
-                startActivity(new Intent(this, HistoryActivity.class)));
-        appBar.addView(history, new LinearLayout.LayoutParams(
-                Ui.dp(this, 48), Ui.dp(this, 48)));
-
         ImageButton more = Ui.toolbarButton(this, R.drawable.ic_more_vert, "More options");
         more.setOnClickListener(this::showMoreMenu);
-        LinearLayout.LayoutParams moreParams = new LinearLayout.LayoutParams(
-                Ui.dp(this, 48), Ui.dp(this, 48));
-        moreParams.leftMargin = Ui.dp(this, 4);
-        appBar.addView(more, moreParams);
+        appBar.addView(more, new LinearLayout.LayoutParams(
+                Ui.dp(this, 48), Ui.dp(this, 48)));
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -176,9 +167,19 @@ public final class MainActivity extends Activity {
         TextView logButton = Ui.action(this, "Log push-ups", true);
         logButton.setContentDescription("Log today's push-ups");
         logButton.setOnClickListener(view -> loadAndShowLogDialog());
-        LinearLayout.LayoutParams logParams = Ui.matchWrap();
+        LinearLayout.LayoutParams logParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 56));
         logParams.topMargin = Ui.dp(this, 14);
         page.addView(logButton, logParams);
+
+        TextView historyButton = Ui.action(this, "View history", false);
+        historyButton.setContentDescription("Open monthly push-up history");
+        historyButton.setOnClickListener(view ->
+                startActivity(new Intent(this, HistoryActivity.class)));
+        LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 56));
+        historyParams.topMargin = Ui.dp(this, 10);
+        page.addView(historyButton, historyParams);
 
         LinearLayout statsCard = new LinearLayout(this);
         statsCard.setOrientation(LinearLayout.HORIZONTAL);
@@ -194,27 +195,26 @@ public final class MainActivity extends Activity {
         statsParams.topMargin = Ui.dp(this, 14);
         page.addView(statsCard, statsParams);
 
-        TextView author = Ui.text(
-                this,
-                "Thuc Nguyen  ·  GitHub",
-                11,
-                Ui.MUTED);
-        author.setGravity(Gravity.CENTER);
-        author.setMinHeight(Ui.dp(this, 48));
-        author.setPadding(Ui.dp(this, 12), Ui.dp(this, 4),
-                Ui.dp(this, 12), Ui.dp(this, 4));
-        author.setClickable(true);
-        author.setFocusable(true);
-        author.setContentDescription(
-                "Built by Thuc Nguyen. Open the Pushup Log repository on GitHub");
-        author.setBackground(Ui.ripple(
-                this, Ui.BG, 16, android.graphics.Color.argb(30, 255, 255, 255)));
-        author.setOnClickListener(view -> startActivity(new Intent(
+        LinearLayout credit = new LinearLayout(this);
+        credit.setOrientation(LinearLayout.HORIZONTAL);
+        credit.setGravity(Gravity.CENTER);
+        TextView author = Ui.text(this, "Thuc Nguyen  ·  ", 11, Ui.MUTED);
+        credit.addView(author);
+        TextView github = Ui.text(this, "GitHub", 11, Ui.MUTED);
+        github.setPadding(Ui.dp(this, 3), Ui.dp(this, 2),
+                Ui.dp(this, 3), Ui.dp(this, 2));
+        github.setClickable(true);
+        github.setFocusable(true);
+        github.setContentDescription("Open the Pushup Log repository on GitHub");
+        github.setBackground(Ui.ripple(
+                this, Ui.BG, 8, android.graphics.Color.argb(25, 255, 255, 255)));
+        github.setOnClickListener(view -> startActivity(new Intent(
                 Intent.ACTION_VIEW,
                 Uri.parse("https://github.com/thucldnguyen/PushLog"))));
+        credit.addView(github);
         LinearLayout.LayoutParams authorParams = Ui.matchWrap();
         authorParams.topMargin = Ui.dp(this, 6);
-        page.addView(author, authorParams);
+        page.addView(credit, authorParams);
 
         return screen;
     }

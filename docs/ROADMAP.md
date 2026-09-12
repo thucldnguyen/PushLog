@@ -23,7 +23,7 @@ These are proposals based on source review, not claims of measured performance p
 
 - Measure cold start and history navigation on a modest phone before introducing architectural changes.
 - Cache chart labels and daily values outside `MonthlyBarChartView.onDraw`; it currently creates number formatters, date objects, and label strings during each draw. This is a small optimization candidate, not a demonstrated bottleneck.
-- Keep decorative media out of the core dashboard so the primary state and action remain visible without routine scrolling.
+- Keep dashboard artwork compact enough that the primary state and action remain visible without routine scrolling.
 - Retain background database work; consider a small repository layer to centralize errors and lifecycle handling as features grow.
 - Avoid caching all-time statistics until profiling justifies the invalidation complexity. Existing date-keyed month queries are appropriate for this data size.
 - Evaluate release shrinking with release-build smoke checks and measured APK/startup comparisons.

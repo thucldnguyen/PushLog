@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ScrollView;
@@ -139,12 +140,20 @@ public final class MainActivity extends Activity {
         page.setPadding(Ui.dp(this, 22), Ui.dp(this, 10), Ui.dp(this, 22), Ui.dp(this, 20));
         scroll.addView(page, Ui.matchWrap());
 
+        ImageView hero = new ImageView(this);
+        hero.setImageResource(R.drawable.hero_pushup);
+        hero.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        hero.setContentDescription("Athlete holding a push-up position");
+        page.addView(hero, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 112)));
+
         LinearLayout todayCard = new LinearLayout(this);
         todayCard.setOrientation(LinearLayout.VERTICAL);
         todayCard.setGravity(Gravity.CENTER);
         todayCard.setPadding(Ui.dp(this, 18), Ui.dp(this, 18), Ui.dp(this, 18), Ui.dp(this, 18));
         todayCard.setBackground(Ui.outlined(Ui.CARD_ALT, Ui.LINE, 24, this));
         LinearLayout.LayoutParams todayCardParams = Ui.matchWrap();
+        todayCardParams.topMargin = Ui.dp(this, 4);
         page.addView(todayCard, todayCardParams);
 
         todayDate = Ui.title(this, "TODAY", 13);

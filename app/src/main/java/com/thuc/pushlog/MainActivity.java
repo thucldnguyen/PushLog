@@ -136,8 +136,8 @@ public final class MainActivity extends Activity {
 
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setGravity(Gravity.CENTER_HORIZONTAL);
-        page.setPadding(Ui.dp(this, 22), Ui.dp(this, 10), Ui.dp(this, 22), Ui.dp(this, 20));
+        page.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        page.setPadding(Ui.dp(this, 22), Ui.dp(this, 12), Ui.dp(this, 22), Ui.dp(this, 12));
         scroll.addView(page, Ui.matchWrap());
 
         ImageView hero = new ImageView(this);
@@ -145,7 +145,7 @@ public final class MainActivity extends Activity {
         hero.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         hero.setContentDescription("Athlete holding a push-up position");
         page.addView(hero, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 112)));
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 160)));
 
         LinearLayout todayCard = new LinearLayout(this);
         todayCard.setOrientation(LinearLayout.VERTICAL);
@@ -153,7 +153,7 @@ public final class MainActivity extends Activity {
         todayCard.setPadding(Ui.dp(this, 18), Ui.dp(this, 18), Ui.dp(this, 18), Ui.dp(this, 18));
         todayCard.setBackground(Ui.outlined(Ui.CARD_ALT, Ui.LINE, 24, this));
         LinearLayout.LayoutParams todayCardParams = Ui.matchWrap();
-        todayCardParams.topMargin = Ui.dp(this, 4);
+        todayCardParams.topMargin = Ui.dp(this, 8);
         page.addView(todayCard, todayCardParams);
 
         todayDate = Ui.title(this, "TODAY", 13);

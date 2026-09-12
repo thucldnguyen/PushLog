@@ -22,7 +22,7 @@ Android 8.0+ · Java · Android framework UI · SQLite · No third-party runtime
 
 ## Project status
 
-Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.7 introduces a compact, task-focused Android layout while retaining the push-up athlete artwork: today’s total and logging action stay in the initial viewport, history uses a calendar/chart segmented control, and reminder/import settings live in the app-bar menu.
+Early personal app, preparing for a polished public release. Not yet published on Google Play. Version 1.3.8 uses a balanced full-viewport Android dashboard with prominent athlete artwork, today’s total, logging action, and compact stats; history uses a calendar/chart segmented control, and reminder/import settings live in the app-bar menu.
 
 Fresh installs start empty. Existing on-device records are preserved when updating with the same application ID and signing certificate. Personal workout archives and signing keys are not part of this repository.
 
